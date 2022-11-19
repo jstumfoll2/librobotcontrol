@@ -43,10 +43,10 @@
 #define GYRO_CAL_FILE		"gyro.cal"
 #define MAG_CAL_FILE		"mag.cal"
 
-//I2C bus and address definitions for Robotics Cape & bealgebone blue
-#define RC_IMU_BUS		2
-#define RC_IMU_INTERRUPT_PIN_CHIP 3
-#define RC_IMU_INTERRUPT_PIN_PIN  21 // gpio3.21 P9.25
+//I2C bus and address definitions for Robotics Cape & bealgebone AI
+#define RC_IMU_BUS		3 // i2c bus
+#define RC_IMU_INTERRUPT_PIN_CHIP 5
+#define RC_IMU_INTERRUPT_PIN_PIN  17 // gpio5.17 P9.25
 
 // macros
 #define ARRAY_SIZE(array) sizeof(array)/sizeof(array[0])

@@ -23,8 +23,9 @@
 
 // ocp only used for exporting right now, everything else through SYS_DIR
 // to allow for shorter strings and neater code.
-#define OCP_DIR "/sys/devices/platform/ocp/4830%d000.epwmss/4830%d200.pwm/pwm"
-#define OCP_OFFSET	66
+#define OCP_DIR "/sys/devices/platform/44000000.ocp/4844%d000.epwmss/4844%d200.pwm/pwm"
+#define OCP_OFFSET	75
+// offset must match offset of * in glob find below. If OCP_DIR changes length OCP_OFFSET will change as well!
 
 // preposessor macros
 #define unlikely(x)	__builtin_expect (!!(x), 0)
@@ -64,9 +65,15 @@ static int __export_channels(int ss)
 	len = snprintf(buf, sizeof(buf), OCP_DIR "/pwmchip*/export", ss*2, ss*2);
 	glob(buf, 0, NULL, &globbuf);
 
+
+    #ifdef DEBUG
+    fprintf(stderr, "Exporting %s \n", buf);
+    #endif
+
 	// no pwmchipx directory found
 	if(globbuf.gl_pathc == 0){
 		perror("ERROR in rc_pwm_init, can't find pwm export file");
+		fprintf(stderr, buf);
 		fprintf(stderr,"Probably not running on BeagleBone or device tree not configured\n");
 		globfree(&globbuf);
 		return -1;
@@ -156,6 +163,7 @@ static int __unexport_channels(int ss)
 	// no pwmchipx directory found
 	if(globbuf.gl_pathc == 0){
 		perror("ERROR in rc_pwm_init, can't find pwm unexport file");
+		fprintf(stderr,"Filename searched: %s\n",buf);
 		fprintf(stderr,"Probably not running on BeagleBone or device tree not configured\n");
 		globfree(&globbuf);
 		return -1;
@@ -202,6 +210,11 @@ int rc_pwm_init(int ss, int frequency)
 	int polarityB_fd;
 	char buf[MAXBUF];
 	int len;
+	
+	
+    #ifdef DEBUG
+    fprintf(stderr, "Initializing channel %d\n", ss);
+    #endif
 
 	// sanity checks
 	if(ss<0 || ss>2){
@@ -232,6 +245,10 @@ int rc_pwm_init(int ss, int frequency)
 	if(mode==0)	len = snprintf(buf, sizeof(buf), SYS_DIR "/pwmchip%d/pwm0/duty_cycle", ss*2); // mode 0
 	else		len = snprintf(buf, sizeof(buf), SYS_DIR "/pwm-%d:0/duty_cycle", ssindex[ss]); // mode 1
 	dutyA_fd[ss] = open(buf,O_WRONLY);
+	
+    #ifdef DEBUG
+	fprintf(stderr, "Initializing PWM A %s \n", buf);
+	#endif
 
 	if(unlikely(dutyA_fd[ss]==-1)){
 		// first error is probably from udev being slow, wait a bit and try again
@@ -247,6 +264,11 @@ int rc_pwm_init(int ss, int frequency)
 	if(mode==0)	len = snprintf(buf, sizeof(buf), SYS_DIR "/pwmchip%d/pwm1/duty_cycle", ss*2); // mode 0
 	else		len = snprintf(buf, sizeof(buf), SYS_DIR "/pwm-%d:1/duty_cycle", ssindex[ss]); // mode 1
 	dutyB_fd[ss] = open(buf,O_WRONLY);
+	
+    #ifdef DEBUG
+	fprintf(stderr, "Initializing PWM B %s \n", buf);
+	#endif
+	
 	if(unlikely(dutyB_fd[ss]==-1)){
 		perror("ERROR in rc_pwm_init, failed to open duty_cycle channel B FD");
 		fprintf(stderr,"tried accessing: %s\n", buf);
@@ -364,6 +386,7 @@ int rc_pwm_cleanup(int ss)
 	int enableB_fd;
 	char buf[MAXBUF];
 
+    fprintf(stderr, "Closing channel %d\n", ss);
 	// sanity check
 	if(unlikely(ss<0 || ss>2)){
 		fprintf(stderr,"ERROR in rc_pwm_close, subsystem must be between 0 and 2\n");
@@ -377,13 +400,23 @@ int rc_pwm_cleanup(int ss)
 	if(mode==0)	snprintf(buf, sizeof(buf), SYS_DIR "/pwmchip%d/pwm0/enable", ss*2); // mode 0
 	else		snprintf(buf, sizeof(buf), SYS_DIR "/pwm-%d:0/enable", ssindex[ss]); // mode 1
 	enableA_fd = open(buf,O_WRONLY);
+	
+    #ifdef DEBUG
+	fprintf(stderr, "Closing PWM A %s \n", buf);
+	#endif
+	
 	if(unlikely(enableA_fd==-1)){
-		perror("ERROR in rc_pwm_cleanup, failed to open pwm A enable fd");
+		fprintf(stderr,"ERROR in rc_pwm_cleanup, failed to open pwm A enable fd %s\n", buf);
 		return -1;
 	}
 	if(mode==0)	snprintf(buf, sizeof(buf), SYS_DIR "/pwmchip%d/pwm1/enable", ss*2); // mode 0
 	else		snprintf(buf, sizeof(buf), SYS_DIR "/pwm-%d:1/enable", ssindex[ss]); // mode 1
 	enableB_fd = open(buf,O_WRONLY);
+	
+    #ifdef DEBUG
+	fprintf(stderr, "Closing PWM B %s \n", buf);
+	#endif
+	
 	if(unlikely(enableB_fd==-1)){
 		perror("ERROR in rc_pwm_cleanup, failed to open pwm B enable fd");
 		return -1;

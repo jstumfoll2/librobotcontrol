@@ -13,7 +13,7 @@
 #include <rc/time.h>
 #include "bmp_defs.h"
 
-#define BMP_BUS 2
+#define BMP_BUS 3
 
 // local struct for calibration data
 typedef struct bmp280_cal_t{

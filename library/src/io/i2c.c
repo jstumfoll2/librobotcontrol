@@ -64,7 +64,7 @@ int rc_i2c_init(int bus, uint8_t devAddr)
 	sprintf(str,"/dev/i2c-%d",bus);
 	i2c[bus].fd = open(str, O_RDWR);
 	if(i2c[bus].fd==-1){
-		fprintf(stderr,"ERROR: in rc_i2c_init, failed to open /dev/i2c\n");
+		fprintf(stderr,"ERROR: in rc_i2c_init, failed to open /dev/i2c-%d\n",bus);
 		return -1;
 	}
 

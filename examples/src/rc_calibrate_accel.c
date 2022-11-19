@@ -19,7 +19,7 @@
 
 // bus for Robotics Cape and BeagleboneBlue is 2
 // change this for your platform
-#define I2C_BUS 2
+#define I2C_BUS 3
 
 int main()
 {

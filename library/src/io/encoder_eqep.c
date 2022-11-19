@@ -19,9 +19,9 @@
 
 #define MAX_BUF 64
 
-#define EQEP_BASE0 "/sys/devices/platform/ocp/48300000.epwmss/48300180.eqep"
-#define EQEP_BASE1 "/sys/devices/platform/ocp/48302000.epwmss/48302180.eqep"
-#define EQEP_BASE2 "/sys/devices/platform/ocp/48304000.epwmss/48304180.eqep"
+#define EQEP_BASE0 "/sys/devices/platform/44000000.ocp/4843e000.epwmss/4843e180.eqep"
+#define EQEP_BASE1 "/sys/devices/platform/44000000.ocp/48440000.epwmss/48440180.eqep"
+#define EQEP_BASE2 "/sys/devices/platform/44000000.ocp/48442000.epwmss/48442180.eqep"
 
 
 static int fd[3]; //store file descriptors for 3 position files

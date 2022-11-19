@@ -25,7 +25,6 @@ static int init_flag=0;
 
 int rc_encoder_pru_init(void)
 {
-	return 0; // until we fix for AM5
 	int i;
 	// map memory
 	if(rc_model()==MODEL_BB_AI || rc_model()==MODEL_BB_AI_RC)

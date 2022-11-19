@@ -16,13 +16,16 @@
 
 static int running = 0;
 
+//#define DEBUG
+
 // possible modes, user selected with command line arguments
 typedef enum m_mode_t{
 	DISABLED,
 	NORMAL,
 	BRAKE,
 	FREE,
-	SWEEP
+	SWEEP,
+	CIRCLE
 } m_mode_t;
 
 // printed if some invalid argument was given
@@ -57,7 +60,7 @@ int main(int argc, char *argv[])
 
 	// parse arguments
 	opterr = 0;
-	while ((c = getopt(argc, argv, "m:d:F:fbs:h")) != -1){
+	while ((c = getopt(argc, argv, "m:c:d:F:fbs:h")) != -1){
 		switch (c){
 		case 'm': // motor channel option
 			in = atoi(optarg);
@@ -66,6 +69,17 @@ int main(int argc, char *argv[])
 			}
 			else{
 				fprintf(stderr,"-m motor option must be from 0-4\n");
+				return -1;
+			}
+			break;
+		case 'c': // circle spin option
+			if(m_mode!=DISABLED) __print_usage();
+			duty = atof(optarg);
+			if(duty<=1 && duty >=-1){
+				m_mode = CIRCLE;
+			}
+			else{
+				fprintf(stderr,"duty cycle must be from -1 to 1\n");
 				return -1;
 			}
 			break;
@@ -128,7 +142,14 @@ int main(int argc, char *argv[])
 	running =1;
 
 	// initialize hardware first
-	if(rc_motor_init_freq(freq_hz)) return -1;
+	// TODO: if fails during initialization leaves PWMs in a bad state, need to call motor cleanup
+	// need to test update
+	if(rc_motor_init_freq(freq_hz))
+	{
+		printf("\ncalling rc_motor_cleanup()\n");
+		rc_motor_cleanup();
+		return -1;
+	}
 
 	// decide what to do
 	switch(m_mode){
@@ -136,7 +157,14 @@ int main(int argc, char *argv[])
 		printf("sending duty cycle %0.4f\n", duty);
 		rc_motor_set(ch,duty);
 		break;
-	case FREE:
+	case CIRCLE:
+		printf("sending duty cycle %0.4f\n", duty);
+		rc_motor_set(1,duty);
+		rc_motor_set(2,duty);
+		rc_motor_set(3,-duty);
+		rc_motor_set(4,-duty);
+		break;
+    case FREE:
 		printf("Free Spin Mode\n");
 		rc_motor_free_spin(ch);
 		break;

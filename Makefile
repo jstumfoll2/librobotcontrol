@@ -6,8 +6,8 @@ INSTALLDIRWRITE	:= install -d -m 777
 INSTALLNONEXEC	:= install -m 644
 
 all:
-	@make -C library --no-print-directory
-	@make -C examples --no-print-directory
+	@make -C library 
+	@make -C examples 
 	@make -C services/rc_battery_monitor --no-print-directory
 	@make -C services/robotcontrol --no-print-directory
 
@@ -15,8 +15,8 @@ install:
 	@$(INSTALLDIR) $(DESTDIR)$(prefix)/share/robotcontrol
 	@cp -r -f  rc_project_template $(DESTDIR)$(prefix)/share/robotcontrol/
 	@$(INSTALLDIR) $(DESTDIR)$(prefix)/bin
-	@$(INSTALL) device_tree/configure_robotics_dt.sh $(DESTDIR)$(prefix)/bin/configure_robotics_dt
 	@make -C pru_firmware -s install
+	@make -C pru_firmware/customfw -s install
 	@make -C library -s install
 	@make -C examples -s install
 	@make -C services/rc_battery_monitor -s install

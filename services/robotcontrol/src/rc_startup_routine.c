@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
+#include <fcntl.h> // for open()
 #include <sys/stat.h> // for mkdir and chmod
 #include <sys/types.h> // for mkdir and chmod
 
@@ -54,8 +55,10 @@ int main()
 
 	// whitelist blue, black, and black wireless only when RC device tree is in use
 	model = rc_model();
-	if(model!=MODEL_BB_BLACK_RC && model!=MODEL_BB_BLACK_W_RC && model!=MODEL_BB_BLUE){
+	if(model!=MODEL_BB_BLACK_RC && model!=MODEL_BB_BLACK_W_RC && model!=MODEL_BB_BLUE && model!=MODEL_BB_AI_RC){
 		if(system("grep -q robotcontrol /boot/uEnv.txt")!=0){
+			
+			system("echo 'robotcontrol service can only run on BB Blue, Black, and Black wireless when the robotcontrol device tree is in use.' >> " START_LOG);
 			fprintf(stderr,"robotcontrol service can only run on BB Blue, Black, and Black wireless when the robotcontrol device tree is in use.\n");
 			return 0;
 		}
@@ -83,6 +86,7 @@ int main()
 			system("echo 'timeout reached while waiting for pwm driver' >> " START_LOG);
 			fprintf(stderr,"timeout reached while waiting for pwm driver\n");
 			return 0;
+            break;
 		}
 		rc_usleep(500000);
 	}
@@ -90,17 +94,18 @@ int main()
 	sprintf(buf, "echo 'time (s): %4.2f PWM loaded' >> %s",time,START_LOG);
 	system(buf);
 
-	// wait for eQEP to load
+	// wait for eQEP to load disable for now
 	while(check_eqep()!=0){
 		if(check_timeout()){
 			system("echo 'timeout reached while waiting for eQEP driver' >> " START_LOG);
 			fprintf(stderr,"timeout reached while waiting for eQEP driver\n");
-		 	return 0;
+			return 0;
+            break; // eQEP's won't work yet, break out and continue
 		}
 		rc_usleep(500000);
 	}
 	time = rc_nanos_since_boot()/1000000000.0;
-	sprintf(buf, "echo 'time (s): %4.2f eQEP loaded' >> %s",time,START_LOG);
+	sprintf(buf, "echo 'time (s): %4.2f eQEP (not) loaded' >> %s",time,START_LOG);
 	system(buf);
 
 	// wait for PRU to load
@@ -180,13 +185,16 @@ int check_timeout()
 int check_pwm()
 {
 	// first make sure the driver is loaded, if so the export paths will appear
-	if(access("/sys/devices/platform/ocp/48300000.epwmss/48300200.pwm/",F_OK)!=0){
+	if(access("/sys/devices/platform/44000000.ocp/48440000.epwmss/48440200.pwm/pwm/pwmchip0/pwm-0:0/duty_cycle", F_OK ) != 0){
 		return -1;
 	}
-	if(access("/sys/devices/platform/ocp/48302000.epwmss/48302200.pwm/",F_OK)!=0){
+	if(access("/sys/devices/platform/44000000.ocp/48440000.epwmss/48440200.pwm/pwm/pwmchip0/pwm-0:1/duty_cycle", F_OK ) != 0){
 		return -1;
 	}
-	if(access("/sys/devices/platform/ocp/48304000.epwmss/48304200.pwm/",F_OK)!=0){
+	if(access("/sys/devices/platform/44000000.ocp/48442000.epwmss/48442200.pwm/pwm/pwmchip2/pwm-2:0/duty_cycle", F_OK ) != 0){
+		return -1;
+	}
+	if(access("/sys/devices/platform/44000000.ocp/48442000.epwmss/48442200.pwm/pwm/pwmchip2/pwm-2:1/duty_cycle", F_OK ) != 0){
 		return -1;
 	}
 
@@ -201,6 +209,7 @@ int check_pwm()
  */
 int check_eqep()
 {
+	/*
 	if(access("/sys/devices/platform/ocp/48300000.epwmss/48300180.eqep/enabled", F_OK)){
 		fprintf(stderr,"missing eqep0\n");
 		return -1;
@@ -213,6 +222,7 @@ int check_eqep()
 		fprintf(stderr,"missing eqep0\n");
 		return -1;
 	}
+	*/
 	return 0;
 }
 
@@ -227,5 +237,27 @@ int check_pru()
 	if(access("/sys/class/remoteproc/remoteproc1/state", F_OK)){
 		return -1;
 	}
+	
+	
+	// Must start firmware on PRU2_0
+	if(access("/sys/class/remoteproc/remoteproc2/state", F_OK)){
+		return -1;
+	}
+	
+	int fd=open("/sys/class/remoteproc/remoteproc2/state",O_RDWR);
+	
+	if(fd==-1){
+		fprintf(stderr, "ERROR opening PRU2_0");
+		return -1;
+	}
+	
+	int ret = write(fd, "start", 5);
+    if(ret<0){
+		perror("ERROR in starting PRU2_0");
+		return -1;
+	}
+	
+	close(fd);
+	
 	return 0;
 }

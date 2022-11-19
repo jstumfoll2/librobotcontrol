@@ -18,6 +18,10 @@
 #include <rc/time.h>
 #include <rc/model.h>
 
+
+// Note: May need to create folder location for this file
+// create file /usr/lib/tmpfiles.d/rc_battery_monitor.conf
+//  file contents: d /run/librobotcontrol 0777 root root
 #define BATTPIDFILE	"/run/librobotcontrol/rc_battery_monitor.pid"
 #define START_BLINK_US	100000	// 0.1 second
 
@@ -34,7 +38,7 @@
 #define LOOP_HZ		3
 #define LOOP_SLEEP_US	1000000/LOOP_HZ
 #define FITLER_SAMPLES	6	// average over 6 samples, 3 seconds
-#define STD_DEV_TOL	0.04	// above 0.1 definitely charging
+#define STD_DEV_TOL	0.15	// above 0.1 definitely charging
 
 // functions
 static void illuminate_leds(int i);
@@ -88,7 +92,7 @@ int main(int argc, char *argv[])
 
 	// whitelist blue, black, and black wireless only when RC device tree is in use
 	model = rc_model();
-	if(model!=MODEL_BB_BLACK_RC && model!=MODEL_BB_BLACK_W_RC && model!=MODEL_BB_BLUE){
+	if(model!=MODEL_BB_BLACK_RC && model!=MODEL_BB_BLACK_W_RC && model!=MODEL_BB_BLUE && model!=MODEL_BB_AI_RC ){
 		if(system("grep -q roboticscape /boot/uEnv.txt")!=0){
 			fprintf(stderr,"rc_battery_monitor can only run on BB Blue, Black, and Black wireless when the roboticscape device tree is in use.\n");
 			return 0;
@@ -123,6 +127,11 @@ int main(int argc, char *argv[])
 	if(rc_led_set(RC_LED_BAT75,0)) return -1;
 	if(rc_led_set(RC_LED_BAT100,0)) return -1;
 
+	// wait for adc to load
+	while(rc_adc_init()!=0){
+		rc_usleep(500000);
+	}
+	
 	// enable adc
 	if(rc_adc_init()) return -1;
 
@@ -189,8 +198,14 @@ int main(int argc, char *argv[])
 		// if a 2S pack is connected or not
 		if(v_pack>(2*CELL_DIS)) stddev = rc_ringbuf_std_dev(filterB.in_buf);
 
+//			printf("v_pack = %0.2fV\n",v_pack);
+//			printf("stddev = %0.2fV\n",stddev);
+//			printf("STD_DEV_TOL = %0.2fV\n",STD_DEV_TOL);
+			
 		// check if 2s pack if connected
 		if(v_pack>(2*CELL_DIS) && stddev<STD_DEV_TOL){
+			
+//			printf("2S Pack Connected!\n");
 			pack_connected = 1;
 			cell_voltage = v_pack/2;
 			num_cells = 2;
@@ -199,31 +214,38 @@ int main(int argc, char *argv[])
 
 		// check charging condition
 		if(pack_connected && v_jack>10.0 && cell_voltage<V_CHG_DETECT){
+			
+//			printf("Pack Charging!\n");
 			charging = 1;
 		}
 		else charging = 0;
 
 		// no 2S pack on the White 3-pin connector, check for dc jack batteries
 		if(!pack_connected){
+			
 			// check 4S condition
 			if(v_jack>CELL_DIS*4 && v_jack<CELL_MAX*4){
 				num_cells = 4;
 				cell_voltage = v_jack/4;
+//				printf("4S Battery Pack on DC connector!\n");
 			}
 			// check for 3S condition
 			else if(v_jack>CELL_DIS*3 && v_jack<CELL_MAX*3){
 				num_cells = 3;
 				cell_voltage = v_jack/3;
+//				printf("3S Battery Pack on DC connector!\n");
 			}
 			// check for 2S condition
 			else if(v_jack>CELL_DIS*2 && v_jack<CELL_MAX*2){
 				num_cells = 2;
 				cell_voltage = v_jack/2;
+//				printf("2S Battery Pack on DC connector!\n");
 			}
 			// no pack connected
 			else {
 				cell_voltage = 0;
 				num_cells = 0;
+//		     	printf("No Pack Connected!\n");
 			}
 		}
 

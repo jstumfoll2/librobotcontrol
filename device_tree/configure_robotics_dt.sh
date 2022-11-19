@@ -3,6 +3,7 @@
 OVERLAY=RoboticsCape
 TREE_BLACK_RC=am335x-boneblack-roboticscape.dtb
 TREE_BW_RC=am335x-boneblack-wireless-roboticscape.dtb
+TREE_BBAI_RC=am5729-beagleboneai-roboticscape.dtb
 UENV=/boot/uEnv.txt
 
 KERNEL="$(uname -r)"
@@ -83,6 +84,17 @@ elif   [ "$MODEL" == "TI AM335x BeagleBone Black" ]; then
 		DTB="$TREE_BLACK_RC"
 	else
 		echo "ERROR, can't find $TREE_BLACK_RC for this kernel."
+		echo "no changes made to uEnv.txt"
+	fi
+	
+# test for BBAI
+elif   [ "$MODEL" == "BeagleBoard.org BeagleBone AI" ]; then
+
+	# if the roboticscape tree is available, use that
+	if [ -a "/boot/dtbs/$UNAME/$TREE_BBAI_RC" ]; then
+		DTB="$TREE_BBAI_RC"
+	else
+		echo "ERROR, can't find $TREE_BBAI_RC for this kernel."
 		echo "no changes made to uEnv.txt"
 	fi
 

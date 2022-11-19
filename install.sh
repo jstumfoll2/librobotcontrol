@@ -16,24 +16,24 @@ echo ""
 
 
 
-read n
-case $n in
-	1)
+#read n
+#case $n in
+#	1)
 		mode=BB
-		echo "ready to install on BeagleBone, press enter to continue"
-		;;
-	2)
-		mode=OTHER
-		echo "ready to install generic library, press enter to continue"
-		;;
-
-	*)
-		echo "invalid option"
-		exit;;
-esac
+#		echo "ready to install on BeagleBone, press enter to continue"
+#		;;
+#	2)
+#		mode=OTHER
+#		echo "ready to install generic library, press enter to continue"
+#		;;
+#
+#	*)
+#		echo "invalid option"
+#		exit;;
+#esac
 
 # wait for keypress
-read n
+#read n
 
 
 case $mode in
@@ -46,7 +46,7 @@ case $mode in
 		sudo systemctl daemon-reload
 		sudo systemctl enable robotcontrol
 		sudo systemctl enable rc_battery_monitor
-		sudo configure_robotics_dt.sh
+#		sudo configure_robotics_dt.sh
 		;;
 	OTHER)
 		# for other platforms just install libary and examples

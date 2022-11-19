@@ -100,11 +100,11 @@ static void __check_model(void)
 			return;
 		}
 		if(strcmp(c, "TI AM57xx BeagleBone")==0){
-			current_model = MODEL_BB_AM57;
+			current_model = MODEL_BB_AI;
 			return;
 		}
 		if(strcmp(c, "TI AM57xx BeagleBone RoboticsCape")==0){
-			current_model = MODEL_BB_AM57_RC;
+			current_model = MODEL_BB_AI_RC;
 			return;
 		}
 		if(strcmp(c, "TI AM335x PocketBeagle")==0) {
