@@ -34,24 +34,24 @@
 ;	.cdecls "robotics_cape_defs.h"
 
 ; PRU setup definitions
-	; .asg    C4,     CONST_SYSCFG
-	.asg    C28,    CONST_PRUSHAREDRAM
+	; .mov    C4,     CONST_SYSCFG
+	.mov    C28,    CONST_PRUSHAREDRAM
 
-	.asg	0x22000,	PRU0_CTRL
-	.asg    0x24000,    PRU1_CTRL       ; page 19
-	; .asg    0x28,       CTPPR0          ; page 75
+	.mov	0x22000,	PRU0_CTRL
+	.mov    0x24000,    PRU1_CTRL       ; page 19
+	; .mov    0x28,       CTPPR0          ; page 75
 
-	.asg	0x000,	OWN_RAM
-	.asg	0x020,	OTHER_RAM
-	.asg    0x100,	SHARED_RAM       ; This is so prudebug can find it.
-	.asg    64,     CNT_OFFSET
+	.mov	0x000,	OWN_RAM
+	.mov	0x020,	OTHER_RAM
+	.mov    0x100,	SHARED_RAM       ; This is so prudebug can find it.
+	.mov    64,     CNT_OFFSET
 
 ; Encoder counting definitions
 ; these pin definitions are specific to SD-101D Robotics Cape
-	.asg	r0,			OLD		; keep last known values of chA and B in memory
-	.asg	r1,			EXOR	; place to store the XOR of old with new AB vals
-	.asg	18,			A
-	.asg	16,			B
+	.mov	r0,			OLD		; keep last known values of chA and B in memory
+	.mov	r1,			EXOR	; place to store the XOR of old with new AB vals
+	.mov	18,			A
+	.mov	16,			B
 
 increment	.macro
 	LBCO	&r2, CONST_PRUSHAREDRAM, CNT_OFFSET, 4	; load existing counter from shared memory
@@ -70,13 +70,13 @@ decrement	.macro
 	.clink
 	.global start
 start:
-; 	LBCO	&r0, CONST_SYSCFG, 4, 4		; Enable OCP master port
-; 	CLR	r0, r0, 4					; Clear SYSCFG[STANDBY_INIT] to enable OCP master port
-; 	SBCO	&r0, CONST_SYSCFG, 4, 4
+ 	LBCO	&r0, CONST_SYSCFG, 4, 4		; Enable OCP master port
+ 	CLR	r0, r0, 4					; Clear SYSCFG[STANDBY_INIT] to enable OCP master port
+ 	SBCO	&r0, CONST_SYSCFG, 4, 4
 ; Configure the programmable pointer register for PRU0 by setting c28_pointer[15:0]
-	; LDI     r0, SHARED_RAM              ; Set C28 to point to shared RAM
-	; LDI32   r1, PRU0_CTRL + CTPPR0		; Note we use beginning of shared ram unlike example which
-	; SBBO    &r0, r1, 0, 4				; has arbitrary 2048 offset
+	 LDI     r0, SHARED_RAM              ; Set C28 to point to shared RAM
+     LDI32   r1, PRU1_CTRL + CTPPR0		; Note we use beginning of shared ram unlike example which JMS: change 0 to 1
+	 SBBO    &r0, r1, 0, 4				; has arbitrary 2048 offset
 
 ; initialize by setting current state of two channels
 	MOV 	OLD, r31

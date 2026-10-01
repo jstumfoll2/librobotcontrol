@@ -1,6 +1,6 @@
 ;******************************************************************************
 ;* PRU C/C++ Codegen                                              Unix v2.1.5 *
-;* Date/Time created: Sat Jul  4 13:13:27 2020                                *
+;* Date/Time created: Sat Nov 19 17:53:26 2022                                *
 ;******************************************************************************
 	.compiler_opts --abi=eabi --endian=little --hll_source=on --object_format=elf --silicon_version=3 --symdebug:dwarf --symdebug:dwarf_version=3 
 
@@ -48,8 +48,8 @@ $C$DW$3	.dwtag  DW_TAG_variable, DW_AT_name("pru_remoteproc_ResourceTable")
 	.dwattr $C$DW$3, DW_AT_decl_file("src/resource_table_pru1.h")
 	.dwattr $C$DW$3, DW_AT_decl_line(0x40)
 	.dwattr $C$DW$3, DW_AT_decl_column(0x1a)
-;	/usr/bin/optpru /tmp/TI0ol4EeDCl /tmp/TI0olyac11w 
-;	/usr/bin/acpiapru -@/tmp/TI0ole7atIF 
+;	/usr/bin/optpru /tmp/TI2diwp5wAd /tmp/TI2di0EOgZg 
+;	/usr/bin/acpiapru -@/tmp/TI2diII944W 
 	.sect	".text:main"
 	.clink
 	.global	||main||

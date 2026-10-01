@@ -16,16 +16,18 @@
 #define AM335X_ENCODER_PRU_CH		0 // PRU0
 #define AM335X_ENCODER_PRU_FW		"am335x-pru0-rc-encoder-fw"
 #define AM57XX_ENCODER_PRU_CH		3 // PRU1_1
-#define AM57XX_ENCODER_PRU_FW		"am57xx-pru1_1-rc-encoder-fw"
-#define ENCODER_MEM_OFFSET		16
+#define AM57XX_ENCODER_PRU_FW		"am57xx-pru1_1-rc-encoder-fw-c"
+#define ENCODER_MEM_OFFSET		0 //16
 
 // pru shared memory pointer
-static volatile unsigned int* shared_mem_32bit_ptr = NULL;
+static volatile int* shared_mem_32bit_ptr = NULL;
 static int init_flag=0;
 
 int rc_encoder_pru_init(void)
 {
 	int i;
+	int memval = 0;
+
 	// map memory
 	if(rc_model()==MODEL_BB_AI || rc_model()==MODEL_BB_AI_RC)
 		shared_mem_32bit_ptr = rc_pru_shared_mem_ptr(AM57XX_ENCODER_PRU_CH);
@@ -38,6 +40,8 @@ int rc_encoder_pru_init(void)
 	}
 	// set first channel to be nonzero, PRU binary will zero this out later
 	shared_mem_32bit_ptr[ENCODER_MEM_OFFSET]=42;
+	memval = shared_mem_32bit_ptr[ENCODER_MEM_OFFSET];
+	printf("memval = %d\n", memval);
 
 	// start pru
 	if(rc_model()==MODEL_BB_AI || rc_model()==MODEL_BB_AI_RC){
@@ -53,13 +57,13 @@ int rc_encoder_pru_init(void)
 	}
 
 	// make sure memory actually got zero'd out
-	for(i=0;i<40;i++){
-		if(shared_mem_32bit_ptr[ENCODER_MEM_OFFSET]==0){
+	//for(i=0;i<40;i++){
+		//if(shared_mem_32bit_ptr[ENCODER_MEM_OFFSET]==0){
 			init_flag=1;
 			return 0;
-		}
-		rc_usleep(100000);
-	}
+		//}
+	//	rc_usleep(100000);
+	//}
 
 	if(rc_model()==MODEL_BB_AI || rc_model()==MODEL_BB_AI_RC){
 		fprintf(stderr, "ERROR in rc_encoder_pru_init, %s failed to load\n", AM57XX_ENCODER_PRU_FW);
@@ -97,6 +101,15 @@ int rc_encoder_pru_read(void)
 		fprintf(stderr, "ERROR in rc_encoder_pru_read, call rc_encoder_pru_init first\n");
 		return -1;
 	}
+	
+	//printf("Read: 0x%2x 0x%2x 0x%2x", shared_mem_32bit_ptr[0], shared_mem_32bit_ptr[4], shared_mem_32bit_ptr[8]);
+	// for (int i = 0; i<20; i++)
+	// {
+	//     int j = (int) shared_mem_32bit_ptr[i];
+	// 	printf("0x%08x ", j);
+	// }
+	// printf("\n");
+
 	return (int) shared_mem_32bit_ptr[ENCODER_MEM_OFFSET];
 }
 

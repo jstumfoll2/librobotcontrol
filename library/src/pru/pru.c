@@ -44,10 +44,10 @@
  *
  * TODO: Use /dev/uioX to isolate permissions as well as abstract the offset
  */
-#define PRU_LEN		0x20000		// Length of PRU memory (don't reach into registers)
+#define PRU_LEN		0x20000		// Length of PRU memory (don't reach into registers) // JMS is this correct?
 #define PRU_SHAREDMEM	0x10000		// Offset to shared memory
 
-static volatile unsigned int* shared_mem_32bit_ptr[6];
+static volatile int* shared_mem_32bit_ptr;
 
 static int __open_pru_ch(int ch, int state, int flags)
 {
@@ -142,6 +142,7 @@ int rc_pru_start(int ch, const char* fw_name)
 	}
 	memset(buf,0,sizeof(buf));
 	ret=read(fd, buf, sizeof(buf));
+	printf("PRU Status: %s\n", buf);
 	close(fd);
 	if(ret==-1){
 		perror("ERROR in rc_pru_start reading state");
@@ -160,12 +161,12 @@ int rc_pru_start(int ch, const char* fw_name)
 volatile uint32_t* rc_pru_shared_mem_ptr(int ch)
 {
 	int fd;
-	volatile unsigned int* map;
+	volatile int* map;
 	off_t offset = 0;
 
 	// if already set, just return the pointer
-	if(shared_mem_32bit_ptr[ch]!=NULL){
-		return shared_mem_32bit_ptr[ch];
+	if(shared_mem_32bit_ptr!=NULL){
+		return shared_mem_32bit_ptr;
 	}
 
 	// map shared memory
@@ -180,6 +181,7 @@ volatile uint32_t* rc_pru_shared_mem_ptr(int ch)
 	case 3:
 		//offset=AM57XX_PRUSS1_ADDR;
 		fd=open("/dev/uio0", O_RDWR | O_SYNC);
+		//fd=open("/dev/mem", O_RDWR | O_SYNC);
 		break;
 	case 4:
 	case 5:
@@ -197,20 +199,30 @@ volatile uint32_t* rc_pru_shared_mem_ptr(int ch)
 		return NULL;
 	}
 
-	map = mmap(0, PRU_LEN, PROT_READ | PROT_WRITE, MAP_SHARED, fd, offset);
+	map = mmap(NULL, PRU_LEN, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+	close(fd);
+
 	if(map==MAP_FAILED){
 		perror("ERROR in rc_pru_shared_mem_ptr failed to map memory");
-		close(fd);
-		return NULL;
+	 	return NULL;
 	}
-	close(fd);
 
 	// set global shared memory pointer
 	// Points to start of shared memory
-	shared_mem_32bit_ptr[ch] = map + PRU_SHAREDMEM/4;
-	printf("%p %p\n", map, shared_mem_32bit_ptr[ch]);
+	shared_mem_32bit_ptr = map + PRU_SHAREDMEM/4;
+	printf("map: %p shared mem offset: %p\n", map, shared_mem_32bit_ptr);
 
-	return shared_mem_32bit_ptr[ch];
+	printf("shared_dataram = %d\n", (int) shared_mem_32bit_ptr[0]);
+
+	// printf("Read: ");
+	// for (int i = 0; i<20; i++)
+	// {
+	// 	unsigned int j = shared_mem_32bit_ptr[i];
+	// 	printf("0x%08x ", j);
+	// }
+	// printf("\n");
+
+	return shared_mem_32bit_ptr;
 }
 
 
@@ -234,6 +246,7 @@ int rc_pru_stop(int ch)
 	}
 	memset(buf,0,sizeof(buf));
 	ret=read(fd, buf, sizeof(buf));
+	printf("PRU Status: %s\n", buf);
 	close(fd);
 	if(ret==-1){
 		perror("ERROR in rc_pru_stop reading state before stopping");

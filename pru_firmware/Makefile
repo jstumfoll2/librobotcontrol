@@ -49,7 +49,8 @@ INCLUDE=--include_path=/usr/lib/ti/pru-software-support-package/include \
 endif
 
 
-LINKER_COMMAND_FILE=./$(SRC_DIR)/AM335x_PRU.cmd
+#LINKER_COMMAND_FILE=./$(SRC_DIR)/AM335x_PRU.cmd
+LINKER_COMMAND_FILE=./$(SRC_DIR)/am57xx_pru.cmd
 STACK_SIZE=0x100
 HEAP_SIZE=0x100
 
